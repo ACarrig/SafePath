@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = googleMap;
 
         // Add a marker in Madison and move the camera
-        LatLng madison = new LatLng(43, -89);
+        LatLng madison = new LatLng(43.073051, -89.401230);
         mMap.addMarker(new MarkerOptions()
                 .position(madison)
                 .title("Marker in Madison"));
