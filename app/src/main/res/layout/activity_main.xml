@@ -1,17 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#0D9FE1"
+    android:backgroundTint="#06A6EF"
+    android:backgroundTintMode="add"
     tools:context=".MainActivity">
 
     <fragment
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
         android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment" />
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/navigateButton"
+        android:layout_width="289dp"
+        android:layout_height="59dp"
+        android:layout_marginBottom="48dp"
+        android:backgroundTint="#1992F3"
+        android:fontFamily="sans-serif"
+        android:text="Navigate"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/settingsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="34dp"
+        android:backgroundTint="#FAF9F6"
+        android:clickable="true"
+        android:contentDescription="@string/settings_header"
+        android:scaleType="center"
+        app:layout_constraintBottom_toTopOf="@+id/navigateButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:maxImageSize="46dp"
+        app:srcCompat="@drawable/settings_icon" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/flagButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="29dp"
+        android:backgroundTint="#FAF9F6"
+        android:clickable="true"
+        android:contentDescription="@string/flag_header"
+        android:scaleType="center"
+        app:layout_constraintBottom_toTopOf="@+id/settingsButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:maxImageSize="46dp"
+        app:srcCompat="@drawable/flag_icon" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

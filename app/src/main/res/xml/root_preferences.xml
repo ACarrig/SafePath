@@ -1,0 +1,39 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/settings_header">
+
+        <ListPreference
+            app:defaultValue="ft"
+            app:key="unit"
+            app:title="@string/units_header"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:entries="@array/reply_entries"
+            app:entryValues="@array/reply_values"
+            app:key="reply"
+            app:title="Danger Radius"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreference
+            app:defaultValue="true"
+            app:key="locationSwitch"
+            app:summary="Location is turned on"
+            app:title="Location" />
+
+        <SwitchPreference
+            app:defaultValue="true"
+            app:key="notificationSwitch"
+            app:summary="Notifications are turned on"
+            app:title="Notifications" />
+
+        <ListPreference
+            app:key="bookmarks"
+            app:summary="Your set bookmarks"
+            app:title="Bookmarked routes" />
+
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>
