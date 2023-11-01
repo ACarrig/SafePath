@@ -44,4 +44,8 @@ dependencies {
     // Navigation Components
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
+    // getting current location (play services location)
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+
 }
