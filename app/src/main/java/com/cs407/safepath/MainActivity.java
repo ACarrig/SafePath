@@ -3,16 +3,19 @@ package com.cs407.safepath;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.preference.PreferenceManager;
 
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
+import android.util.Log;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -36,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private GoogleMap mMap;
     private SearchView mapSearchView;
+    SharedPreferences sp;
+
 
     // For getting user location
     private final int FINE_PERMISSION_CODE = 1;
@@ -51,6 +56,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
+
+        // SETTINGS PREFERENCES SET UP
+        PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
+        sp = PreferenceManager.getDefaultSharedPreferences(this);
+        Log.d("SETTINGS MAIN MESSAGE: ", String.valueOf(sp.getInt("radius", 0))); //example: gets Danger Radius value
+        //
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         // fragmentManager = getSupportFragmentManager();

@@ -1,10 +1,13 @@
 package com.cs407.safepath;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -22,6 +25,9 @@ public class SettingsActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        Log.d("SETTINGS MESSAGE: ", sp.getString("unit", "")); // example of how to get value from settings using key from sharedPreferences
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {

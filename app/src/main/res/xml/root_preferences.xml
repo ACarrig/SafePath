@@ -3,17 +3,18 @@
     <PreferenceCategory app:title="@string/settings_header">
 
         <ListPreference
-            app:defaultValue="ft"
+            app:defaultValue="feet"
             app:key="unit"
+            app:entries="@array/unit_entries"
+            app:entryValues="@array/unit_values"
             app:title="@string/units_header"
             app:useSimpleSummaryProvider="true" />
 
-        <EditTextPreference
-            app:entries="@array/reply_entries"
-            app:entryValues="@array/reply_values"
-            app:key="reply"
+        <SeekBarPreference
+            app:key="radius"
             app:title="Danger Radius"
-            app:useSimpleSummaryProvider="true" />
+            app:showSeekBarValue="true"
+            app:defaultValue="10"/>
 
         <SwitchPreference
             app:defaultValue="true"
