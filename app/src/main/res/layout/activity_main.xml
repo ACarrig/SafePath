@@ -33,15 +33,16 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/navigateButton"
+        android:id="@+id/flagButton"
         android:layout_width="289dp"
         android:layout_height="59dp"
         android:layout_marginBottom="48dp"
-        android:backgroundTint="#1992F3"
+        android:backgroundTint="#E8561D"
         android:fontFamily="sans-serif"
-        android:text="Navigate"
+        android:text="Flag Dangerous Area"
         android:textColor="@color/black"
         android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -56,25 +57,9 @@
         android:clickable="true"
         android:contentDescription="@string/settings_header"
         android:scaleType="center"
-        app:layout_constraintBottom_toTopOf="@+id/navigateButton"
+        app:layout_constraintBottom_toTopOf="@+id/flagButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:maxImageSize="46dp"
         app:srcCompat="@drawable/settings_icon" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/flagButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="15dp"
-        android:layout_marginBottom="29dp"
-        android:backgroundTint="#FAF9F6"
-        android:clickable="true"
-        android:contentDescription="@string/flag_header"
-        android:scaleType="center"
-        app:layout_constraintBottom_toTopOf="@+id/settingsButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:maxImageSize="46dp"
-        app:srcCompat="@drawable/flag_icon" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

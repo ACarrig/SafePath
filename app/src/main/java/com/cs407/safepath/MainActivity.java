@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.preference.PreferenceFragment;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -30,9 +31,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -41,11 +48,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SearchView mapSearchView;
     SharedPreferences sp;
 
-
     // For getting user location
     private final int FINE_PERMISSION_CODE = 1;
     Location currentLocation;
     FusedLocationProviderClient fusedLocationProviderClient;
+
+    // I made a google maps api key that has all the stuff enabled -- Aidan
+    private final String Api_Key = "AIzaSyCN5H7DS_wiFX29U-tgHTaZhToyi5VpfUU";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mapSearchView = findViewById(R.id.mapSearch);
 
+        // Getting user's location / requesting location permission
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
 
@@ -61,15 +71,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
         Log.d("SETTINGS MAIN MESSAGE: ", String.valueOf(sp.getInt("radius", 0))); //example: gets Danger Radius value
-        //
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        // fragmentManager = getSupportFragmentManager();
-
-        // In the youtube series, this line as well as line 89 are uncommented, but in the
-        //     get user location tutorial, they are entirely removed
-        //     May need to figure out later.
-        //SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
         mapSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -93,11 +94,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.addMarker(new MarkerOptions().position(latLng).title(userEnteredLocation));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
                 }
-
                 return false;
             }
-
-            // mapFragment.getMapAsync(this);
 
             @Override
             public boolean onQueryTextChange(String s) {
@@ -106,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         FloatingActionButton fab1 = findViewById(R.id.settingsButton);
-        FloatingActionButton fab2 = findViewById(R.id.flagButton);
+        Button fab2 = findViewById(R.id.flagButton);
         fab1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -130,11 +128,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Current Coordinates
         LatLng usrPos = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-        usrPos = new LatLng(43.073051, -89.401230); // hardcode location
+        //usrPos = new LatLng(43.073051, -89.401230); // hardcode location
 
         // Setting the camera
         mMap.addMarker(new MarkerOptions().position(usrPos).title("My Location"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(usrPos));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(usrPos, 10));
     }
 
     public void openSettings() {
@@ -144,6 +142,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void openFlaggingScreen() {
         Intent intent = new Intent(this, FlaggingActivity.class);
+
+        // Passing user's location to flagging activity
+        intent.putExtra("latitude", currentLocation.getLatitude());
+        intent.putExtra("longitude", currentLocation.getLongitude());
+
         startActivity(intent);
     }
 
