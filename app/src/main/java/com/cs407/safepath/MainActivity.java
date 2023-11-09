@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
         Log.d("SETTINGS MAIN MESSAGE: ", String.valueOf(sp.getInt("radius", 0))); //example: gets Danger Radius value
-        mapType = Integer.valueOf(sp.getString("basemap", null));
+        //mapType = Integer.valueOf(sp.getString("basemap", null));
 
         // Initializing Places AutoComplete Fragment
         if(!Places.isInitialized()) Places.initialize(getApplicationContext(), Api_Key);
@@ -101,9 +101,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 LatLng latLng = place.getLatLng();
                 Log.i("PlacesAPI", "" + latLng.latitude + "\n" + latLng.longitude);
 
-                mMap.addMarker(new MarkerOptions().position(latLng).title("My Location"));
+                mMap.addMarker(new MarkerOptions().position(latLng).title("Destination"));
                 mMap.addPolyline(new PolylineOptions().add(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), latLng));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 1)); //todo: ideally this will be changed
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 2)); //todo: ideally this will be changed
             }
         });
 
@@ -206,48 +206,3 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 }
 
-/** <SearchView
-        android:id="@+id/mapSearch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:background="@color/white"
-                android:elevation="5dp"
-                android:iconifiedByDefault="false"
-                android:queryHint="Search..."
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
- */
-
-/**
- mapSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-@Override
-public boolean onQueryTextSubmit(String s) {
-String userEnteredLocation = mapSearchView.getQuery().toString();
-List<Address> addressList = null;
-
-if (userEnteredLocation != null) {
-Geocoder geocoder = new Geocoder(MainActivity.this);
-
-// Assign the user's query from search bar to addressList
-try {
-addressList = geocoder.getFromLocationName(userEnteredLocation, 1);
-} catch (IOException e) {
-throw new RuntimeException(e);
-}
-
-// If getting multiple results, add a for loop here and change maxResults ^^^
-Address address = addressList.get(0);
-LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-mMap.addMarker(new MarkerOptions().position(latLng).title(userEnteredLocation));
-mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
-}
-return false;
-}
-
-@Override
-public boolean onQueryTextChange(String s) {
-return false;
-}
-}); */
