@@ -7,6 +7,20 @@
         <item>Kilometers</item>
     </string-array>
 
+    <string-array name="basemap_selection">
+        <item>Normal</item>
+        <item>Satellite</item>
+        <item>Terrain</item>
+        <item>Hybrid</item>
+    </string-array>
+
+    <string-array name="basemap_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
     <string-array name="unit_values">
         <item>feet</item>
         <item>meter</item>

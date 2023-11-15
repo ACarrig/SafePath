@@ -53,6 +53,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private GoogleMap mMap;
     SharedPreferences sp;
+
+    private int mapType;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
     PlacesClient placesClient;
 
     // For getting user location
@@ -76,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
         Log.d("SETTINGS MAIN MESSAGE: ", String.valueOf(sp.getInt("radius", 0))); //example: gets Danger Radius value
+        mapType = Integer.valueOf(sp.getString("basemap", null));
 
         // Initializing Places AutoComplete Fragment
         if(!Places.isInitialized()) Places.initialize(getApplicationContext(), Api_Key);
@@ -135,6 +139,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Setting the camera
         mMap.addMarker(new MarkerOptions().position(usrPos).title("My Location"));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(usrPos, 10));
+
+
+        //enable preferences listener for settings -- ismail
+        listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+                if (key.equals("basemap")){
+                    mapType = Integer.valueOf(sp.getString("basemap", null));
+                    mMap.setMapType(mapType);
+                }
+            }
+        };
+        sp.registerOnSharedPreferenceChangeListener(listener);
+
     }
 
     public void openSettings() {

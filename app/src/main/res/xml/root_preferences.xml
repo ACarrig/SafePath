@@ -1,6 +1,8 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
+
     <PreferenceCategory app:title="@string/settings_header">
+
 
         <ListPreference
             app:defaultValue="feet"
@@ -10,11 +12,22 @@
             app:title="@string/units_header"
             app:useSimpleSummaryProvider="true" />
 
+
+        <ListPreference
+            app:defaultValue="1"
+            app:key="basemap"
+            app:entries="@array/basemap_selection"
+            app:entryValues="@array/basemap_values"
+            app:title="@string/basemap_header"
+            app:useSimpleSummaryProvider="true" />
+
+
         <SeekBarPreference
             app:key="radius"
             app:title="Danger Radius"
             app:showSeekBarValue="true"
             app:defaultValue="10"/>
+
 
         <SwitchPreference
             app:defaultValue="true"
@@ -22,11 +35,13 @@
             app:summary="Location is turned on"
             app:title="Location" />
 
+
         <SwitchPreference
             app:defaultValue="true"
             app:key="notificationSwitch"
             app:summary="Notifications are turned on"
             app:title="Notifications" />
+
 
         <ListPreference
             app:key="bookmarks"
@@ -34,7 +49,11 @@
             app:title="Bookmarked routes" />
 
 
+
+
     </PreferenceCategory>
+
+
 
 
 </PreferenceScreen>

@@ -5,6 +5,7 @@
     <string name="settings_header">Settings</string>
     <string name="flag_header">Flagging location</string>
     <string name="units_header">Units of measurement</string>
+    <string name="basemap_header">Set Basemap</string>
     <string name="sync_header">Sync</string>
 
     <!-- Messages Preferences -->
