@@ -3,6 +3,7 @@ package com.cs407.safepath;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
 
@@ -21,6 +22,7 @@ import android.widget.Button;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -29,12 +31,17 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.AutocompleteFragment;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -45,8 +52,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private SearchView mapSearchView;
     SharedPreferences sp;
+    PlacesClient placesClient;
 
     // For getting user location
     private final int FINE_PERMISSION_CODE = 1;
@@ -61,8 +68,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mapSearchView = findViewById(R.id.mapSearch);
-
         // Getting user's location / requesting location permission
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
@@ -72,37 +77,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         sp = PreferenceManager.getDefaultSharedPreferences(this);
         Log.d("SETTINGS MAIN MESSAGE: ", String.valueOf(sp.getInt("radius", 0))); //example: gets Danger Radius value
 
-        mapSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        // Initializing Places AutoComplete Fragment
+        if(!Places.isInitialized()) Places.initialize(getApplicationContext(), Api_Key);
+        placesClient = Places.createClient(this);
+
+        final AutocompleteSupportFragment autocompleteSupportFragment =
+                (AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.autoCompleteFragment);
+
+        // Setting up what properties we want when clicking on autocomplete results
+        autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS));
+        autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public boolean onQueryTextSubmit(String s) {
-                String userEnteredLocation = mapSearchView.getQuery().toString();
-                List<Address> addressList = null;
-
-                if (userEnteredLocation != null) {
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-
-                    // Assign the user's query from search bar to addressList
-                    try {
-                        addressList = geocoder.getFromLocationName(userEnteredLocation, 1);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    // If getting multiple results, add a for loop here and change maxResults ^^^
-                    Address address = addressList.get(0);
-                    LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(latLng).title(userEnteredLocation));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
-                }
-                return false;
+            public void onError(@NonNull Status status) {
+                Toast.makeText(MainActivity.this, "Error with autocomplete thing", Toast.LENGTH_LONG).show();
             }
 
             @Override
-            public boolean onQueryTextChange(String s) {
-                return false;
+            public void onPlaceSelected(@NonNull Place place) {
+                LatLng latLng = place.getLatLng();
+                Log.i("PlacesAPI", "" + latLng.latitude + "\n" + latLng.longitude);
+
+                mMap.addMarker(new MarkerOptions().position(latLng).title("My Location"));
+                mMap.addPolyline(new PolylineOptions().add(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), latLng));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 1)); //todo: ideally this will be changed
             }
         });
 
+        // Settings and Flagging buttons on the main screen
         FloatingActionButton fab1 = findViewById(R.id.settingsButton);
         Button fab2 = findViewById(R.id.flagButton);
         fab1.setOnClickListener(new View.OnClickListener() {
@@ -122,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        Log.i("tag", "onMapReady called");
         mMap = googleMap;
 
         // Add a marker in Madison and move the camera
@@ -151,6 +153,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void getLastLocation() {
+        Log.i("tag", "getLastLocation called");
         // Permission check
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -185,3 +188,49 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 }
+
+/** <SearchView
+        android:id="@+id/mapSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:background="@color/white"
+                android:elevation="5dp"
+                android:iconifiedByDefault="false"
+                android:queryHint="Search..."
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+ */
+
+/**
+ mapSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+@Override
+public boolean onQueryTextSubmit(String s) {
+String userEnteredLocation = mapSearchView.getQuery().toString();
+List<Address> addressList = null;
+
+if (userEnteredLocation != null) {
+Geocoder geocoder = new Geocoder(MainActivity.this);
+
+// Assign the user's query from search bar to addressList
+try {
+addressList = geocoder.getFromLocationName(userEnteredLocation, 1);
+} catch (IOException e) {
+throw new RuntimeException(e);
+}
+
+// If getting multiple results, add a for loop here and change maxResults ^^^
+Address address = addressList.get(0);
+LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+mMap.addMarker(new MarkerOptions().position(latLng).title(userEnteredLocation));
+mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
+}
+return false;
+}
+
+@Override
+public boolean onQueryTextChange(String s) {
+return false;
+}
+}); */
