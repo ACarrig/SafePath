@@ -92,11 +92,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Setting up what properties we want when clicking on autocomplete results
         autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS));
         autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+
+            // When we cannot find the selected place
             @Override
             public void onError(@NonNull Status status) {
                 Toast.makeText(MainActivity.this, "Error with autocomplete thing", Toast.LENGTH_LONG).show();
             }
 
+            // What we do with the selected location from the search bar
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 LatLng latLng = place.getLatLng();
@@ -104,9 +107,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 mMap.addMarker(new MarkerOptions().position(latLng).title("Destination"));
                 //mMap.addPolyline(new PolylineOptions().add(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), latLng));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15)); //todo: ideally this will be changed
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15)); //todo: zoom changed based on convenience
 
-                LatLng origin = new LatLng(43.063842,-89.402628);
+                LatLng origin = new LatLng(43.063842,-89.402628); // todo: delete line if one below works as fix
+
+                origin = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+
                 //START DOWNLOADING ROUTES JSON DATA FROM GOOGLE
                 String url = getDirectionsUrl(origin, latLng); //Form URL for google download
 
@@ -215,6 +221,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
+
     //Download Tasks and Routes Data
     private class DownloadTask extends AsyncTask<String, Void, String> {
 
@@ -291,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
 
-// Drawing polyline in the Google Map for the i-th route
+            // Drawing polyline in the Google Map for the i-th route
             mMap.addPolyline(lineOptions);
         }
     }
