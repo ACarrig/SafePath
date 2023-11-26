@@ -154,7 +154,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Setting the camera
         mMap.addMarker(new MarkerOptions().position(usrPos).title("My Location"));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(usrPos, 10));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(usrPos, 14));
+
+        //test
+        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(usrPos, (float)0.5));
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setCompassEnabled(true);
 
 
         //enable preferences listener for settings -- ismail
