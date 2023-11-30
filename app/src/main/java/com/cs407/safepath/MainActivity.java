@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             try {
                 jObject = new JSONObject(jsonData[0]);
-                DirectionsJSONParser parser = new DirectionsJSONParser();
+                DirectionsParser parser = new DirectionsParser();
 
                 routes = parser.parse(jObject);
             } catch (Exception e) {
@@ -334,7 +334,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * A method to download json data from url
+     * Downloads JSON data from a given URL.
+     *
+     * @param strUrl The URL to download JSON data from.
+     * @return A string containing the downloaded JSON data.
+     * @throws IOException If an I/O exception occurs during the download.
      */
     private String downloadUrl(String strUrl) throws IOException {
         String data = "";
@@ -351,9 +355,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
 
-            String line = "";
+            String line;
             while ((line = br.readLine()) != null) {
                 sb.append(line);
             }
@@ -365,8 +369,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (Exception e) {
             Log.d("Exception", e.toString());
         } finally {
-            iStream.close();
-            urlConnection.disconnect();
+            if (iStream != null) {
+                iStream.close();
+            }
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         }
         return data;
     }
