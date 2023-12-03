@@ -25,6 +25,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -64,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Location currentLocation;
     FusedLocationProviderClient fusedLocationProviderClient;
 
-    // I made a google maps api key that has all the stuff enabled -- Aidan
+    // I made a google maps api key that has all the stuff enabled if needed -- Aidan
     private final String Api_Key = "AIzaSyCN5H7DS_wiFX29U-tgHTaZhToyi5VpfUU";
 
     @Override
@@ -85,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Initializing Places AutoComplete Fragment
         if(!Places.isInitialized()) Places.initialize(getApplicationContext(), Api_Key);
         placesClient = Places.createClient(this);
-
         final AutocompleteSupportFragment autocompleteSupportFragment =
                 (AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.autoCompleteFragment);
 
@@ -109,17 +109,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //mMap.addPolyline(new PolylineOptions().add(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), latLng));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15)); //todo: zoom changed based on convenience
 
-                LatLng origin = new LatLng(43.063842,-89.402628); // todo: delete line if one below works as fix
-
-                origin = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+                LatLng origin = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
 
                 //START DOWNLOADING ROUTES JSON DATA FROM GOOGLE
                 String url = getDirectionsUrl(origin, latLng); //Form URL for google download
-
                 DownloadTask downloadTask = new DownloadTask();
-
                 downloadTask.execute(url);
-
             }
         });
 
@@ -146,13 +141,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.i("tag", "onMapReady called");
         mMap = googleMap;
 
-        // Add a marker to current location of user.
-
-        // Current Coordinates
+        // Current Coordinates of User
         LatLng usrPos = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-        //usrPos = new LatLng(43.073051, -89.401230); // hardcode location
 
-        // Setting the camera
+        // Load in danger zones if any
+        try {
+            Intent intent = getIntent();
+            String[] markerArr = intent.getStringArrayExtra("markerArr");
+            for (int i = 0; i < markerArr.length; i++) {
+
+                // Pull lat and lon from each element in the array
+                double lat = Double.parseDouble(markerArr[i].substring(0, markerArr[i].indexOf(",")));
+                double lon = Double.parseDouble(markerArr[i].substring(markerArr[i].indexOf(",") + 1));
+                LatLng dZoneLatLng = new LatLng(lat, lon);
+
+                // Draw the danger zone on the map
+                mMap.addMarker(new MarkerOptions().position(dZoneLatLng).title("Danger Zone"));
+                mMap.addCircle(new CircleOptions()
+                        .center(dZoneLatLng)
+                        .radius(200)
+                        .strokeColor(Color.RED));
+            }
+        } catch (Exception e) {
+            // no danger zone coord array yet
+            Log.i("CATCH CALLED", e.toString());
+        }
+
+        // Setting the camera & marker
         mMap.addMarker(new MarkerOptions().position(usrPos).title("My Location"));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(usrPos, 14));
 
@@ -172,14 +187,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         };
         sp.registerOnSharedPreferenceChangeListener(listener);
-
     }
 
+    // Settings screen
     public void openSettings() {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
     }
 
+    // Flagging screen
     public void openFlaggingScreen() {
         Intent intent = new Intent(this, FlaggingActivity.class);
 
@@ -214,6 +230,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+    // Requesting Location
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

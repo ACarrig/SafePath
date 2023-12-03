@@ -25,8 +25,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class FlaggingActivity extends AppCompatActivity {
 
     private GoogleMap mMap;
-
     private Circle lastUserCircle;
+
+    // Array with marker / danger zone center coordinates
+    String[] markerArr = new String[100];
+    private int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,18 +41,18 @@ public class FlaggingActivity extends AppCompatActivity {
         Double usrLon = intent.getDoubleExtra("longitude", 0);
         LatLng usrPos = new LatLng(usrLat, usrLon);
 
-
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(googleMap -> {
             mMap = googleMap;
 
-            // display & zoom in on marker
+            // display & zoom in on user's location marker
             mMap.addMarker(new MarkerOptions().position(usrPos).title("My Location"));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(usrPos, 10));
 
             mMap.getUiSettings().setZoomControlsEnabled(true);
             mMap.getUiSettings().setCompassEnabled(true);
 
+            // adding marker with a radius around it AKA "Danger Zone"
             mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                 @Override
                 public void onMapClick(LatLng point) {
@@ -62,12 +65,17 @@ public class FlaggingActivity extends AppCompatActivity {
                             .radius(200)
                             .strokeColor(Color.RED));
 
+                    // Adding the marker data to an array
+                    String markerLatLng = point.toString(); // of form 'lat/lng: (37.338994748292315,-121.98496162891387)'
+                    int leftP = markerLatLng.indexOf("(");
+                    int rightP = markerLatLng.indexOf(")");
+                    markerLatLng = markerLatLng.substring(leftP + 1, rightP); // just the numbers & comma
+                    markerArr[count] = markerLatLng; // adding 'lat-coord,lon-coord' to array
+                    count += 1;
                 }
             });
 
         });
-
-
 
         Button returnButton = findViewById(R.id.returnButton);
         returnButton.setOnClickListener(new View.OnClickListener() {
@@ -77,16 +85,12 @@ public class FlaggingActivity extends AppCompatActivity {
             }
         });
 
-
-
     }
-
 
     public void returnToMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("markerArr", markerArr);
         startActivity(intent);
     }
-
-
 
 }
