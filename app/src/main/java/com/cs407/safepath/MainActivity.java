@@ -71,6 +71,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // I made a google maps api key that has all the stuff enabled if needed -- Aidan
     private final String Api_Key = "AIzaSyCN5H7DS_wiFX29U-tgHTaZhToyi5VpfUU";
 
+    // To hold center points for the danger zones
+    LatLng[] latLngArr = new LatLng[100];
+    private int dZoneCount = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -149,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Current Coordinates of User
         LatLng usrPos = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
 
-        // Load in danger zones if any
+        // Load in danger zones, if any
         try {
             Intent intent = getIntent();
             String[] markerArr = intent.getStringArrayExtra("markerArr");
@@ -166,9 +170,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .center(dZoneLatLng)
                         .radius(circleRadius)
                         .strokeColor(Color.RED));
+
+                // Add LatLng to array (for comparisons when drawing path)
+                latLngArr[i] = dZoneLatLng;
+                dZoneCount += 1;
             }
         } catch (Exception e) {
-            // no danger zone coord array yet
+            // no danger zone coord array yet (catch reached first time loading main screen)
             Log.i("CATCH CALLED", e.toString());
         }
 
@@ -180,7 +188,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(usrPos, (float)0.5));
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.getUiSettings().setCompassEnabled(true);
-
 
         //enable preferences listener for settings -- ismail
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
@@ -291,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 jObject = new JSONObject(jsonData[0]);
                 DirectionsParser parser = new DirectionsParser();
 
-                routes = parser.parse(jObject);
+                routes = parser.parse(jObject, latLngArr, dZoneCount); //todo: added parameters for checking for danger zones
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -317,7 +324,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
 
-                    points.add(position);
+                    // todo: testing distance func. this should just omit the line, doesn't reroute
+                    // Only add the points that aren't in the dangerous area
+                    if(dZoneCount == 0) points.add(position);
+                    for (int q = 0; q < dZoneCount; q++) {
+                        if(distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) > 200.0) {
+                            points.add(position);
+                        }
+                    }
+                    //points.add(position);
                 }
 
                 lineOptions.addAll(points);
@@ -402,4 +417,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         return data;
     }
+
+    // Find the distance (in meters) between two lat-lon pairs
+    public static double distance(double lat1, double lon1, double lat2, double lon2) {
+
+        final int R = 6371; // Radius of the earth in km
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = R * c * 1000; // convert to meters
+
+        return distance;
+    }
+
 }
