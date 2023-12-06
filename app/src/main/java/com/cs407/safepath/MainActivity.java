@@ -298,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 jObject = new JSONObject(jsonData[0]);
                 DirectionsParser parser = new DirectionsParser();
 
-                routes = parser.parse(jObject, latLngArr, dZoneCount); //todo: added parameters for checking for danger zones
+                routes = parser.parse(jObject, latLngArr, dZoneCount, circleRadius); //todo: added parameters for checking for danger zones
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -328,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     // Only add the points that aren't in the dangerous area
                     if(dZoneCount == 0) points.add(position);
                     for (int q = 0; q < dZoneCount; q++) {
-                        if(distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) > 200.0) {
+                        if(distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) > circleRadius) {
                             points.add(position);
                         }
                     }

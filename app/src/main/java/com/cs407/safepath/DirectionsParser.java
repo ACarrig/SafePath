@@ -19,7 +19,7 @@ public class DirectionsParser {
     /**
      * Receives a JSONObject and returns a list of lists containing latitude and longitude.
      */
-    public List<List<HashMap<String, String>>> parse(JSONObject jObject, LatLng[] latLngArr, int dZoneCount) {
+    public List<List<HashMap<String, String>>> parse(JSONObject jObject, LatLng[] latLngArr, int dZoneCount, int circleRadius) {
         List<List<HashMap<String, String>>> routes = new ArrayList<>();
 
         JSONArray jRoutes = null;
@@ -56,18 +56,14 @@ public class DirectionsParser {
 
                             // todo: test distance func here -------------------------------------------------------------
 
-                            // WHAT THIS SEEMS TO DO IS NOT ROUTE THROUGH THE DANGER ZONE, BUT
-                            // IT WILL STILL CONNECT THE POLYLINE THROUGH THE DANGER ZONE IF
-                            // THE ROUTE CONTINUES ON THE OTHER SIDE OF IT AS OPPOSED TO
-                            // RE-ROUTING A COMPLETE PATH AROUND IT AS IT SHOULD
-
                             // Comparing the traversal points to our danger zones
                             if(dZoneCount == 0) path.add(hm);
                             for(int m = 0; m < dZoneCount; m++) {
                                 double dzLat = latLngArr[m].latitude;
                                 double dzLon = latLngArr[m].longitude;
 
-                                if(distance(dzLat, dzLon, list.get(l).latitude, list.get(l).longitude) > 200) {
+                                // checking if point in the path is outside of the dangerous area (distance > 200m)
+                                if(distance(dzLat, dzLon, list.get(l).latitude, list.get(l).longitude) > circleRadius) {
                                     hm.put("lat", Double.toString(list.get(l).latitude));
                                     hm.put("lng", Double.toString(list.get(l).longitude));
                                     path.add(hm);
