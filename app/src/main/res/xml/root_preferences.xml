@@ -29,12 +29,6 @@
             app:defaultValue="10"/>
 
 
-        <SwitchPreference
-            app:defaultValue="true"
-            app:key="locationSwitch"
-            app:summary="Location is turned on"
-            app:title="Location" />
-
 
         <SwitchPreference
             app:defaultValue="true"

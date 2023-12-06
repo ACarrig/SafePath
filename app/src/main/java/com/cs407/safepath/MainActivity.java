@@ -55,10 +55,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private GoogleMap mMap;
     SharedPreferences sp;
+    private int circleRadius;
+
 
     private int mapType;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
     PlacesClient placesClient;
+
 
     // For getting user location
     private final int FINE_PERMISSION_CODE = 1;
@@ -80,6 +83,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // SETTINGS PREFERENCES SET UP
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
+        circleRadius = sp.getInt("radius", 0);
+
         Log.d("SETTINGS MAIN MESSAGE: ", String.valueOf(sp.getInt("radius", 0))); //example: gets Danger Radius value
         //mapType = Integer.valueOf(sp.getString("basemap", null));
 
@@ -159,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.addMarker(new MarkerOptions().position(dZoneLatLng).title("Danger Zone"));
                 mMap.addCircle(new CircleOptions()
                         .center(dZoneLatLng)
-                        .radius(200)
+                        .radius(circleRadius)
                         .strokeColor(Color.RED));
             }
         } catch (Exception e) {
@@ -184,6 +189,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mapType = Integer.valueOf(sp.getString("basemap", null));
                     mMap.setMapType(mapType);
                 }
+                circleRadius = sp.getInt("radius", 0);
             }
         };
         sp.registerOnSharedPreferenceChangeListener(listener);
@@ -202,6 +208,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Passing user's location to flagging activity
         intent.putExtra("latitude", currentLocation.getLatitude());
         intent.putExtra("longitude", currentLocation.getLongitude());
+        intent.putExtra("radius", circleRadius);
 
         startActivity(intent);
     }

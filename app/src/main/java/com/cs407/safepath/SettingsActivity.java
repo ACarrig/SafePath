@@ -8,8 +8,12 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.preference.SeekBarPreference;
 
 public class SettingsActivity extends AppCompatActivity {
+
+    SharedPreferences sp;
+    static int radius1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,14 +30,24 @@ public class SettingsActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        Log.d("SETTINGS MESSAGE: ", sp.getString("unit", "")); // example of how to get value from settings using key from sharedPreferences
+        sp = PreferenceManager.getDefaultSharedPreferences(this);
+        radius1 = sp.getInt("radius", 0);
+
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
+
+            SeekBarPreference seekBarPreference = findPreference("radius");
+            if (seekBarPreference != null) {
+                if (seekBarPreference.getMax() != 500) {
+                    seekBarPreference.setMax(500);
+                }
+                seekBarPreference.setValue(radius1);
+            }
+
         }
     }
 }

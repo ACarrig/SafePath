@@ -27,6 +27,8 @@ public class FlaggingActivity extends AppCompatActivity {
     private GoogleMap mMap;
     private Circle lastUserCircle;
 
+    private int circleRadius;
+
     // Array with marker / danger zone center coordinates
     String[] markerArr = new String[100];
     private int count = 0;
@@ -39,6 +41,7 @@ public class FlaggingActivity extends AppCompatActivity {
         Intent intent = getIntent();
         Double usrLat = intent.getDoubleExtra("latitude", 0);
         Double usrLon = intent.getDoubleExtra("longitude", 0);
+        circleRadius = intent.getIntExtra("radius", 0);
         LatLng usrPos = new LatLng(usrLat, usrLon);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -57,12 +60,12 @@ public class FlaggingActivity extends AppCompatActivity {
                 @Override
                 public void onMapClick(LatLng point) {
 
-                    mMap.addMarker(new MarkerOptions().position(point).title("Touch Location"));
+                    mMap.addMarker(new MarkerOptions().position(point).title("Danger Zone"));
                     //addPulsatingEffect(point);
 
                     mMap.addCircle(new CircleOptions()
                             .center(point)
-                            .radius(200)
+                            .radius(circleRadius)
                             .strokeColor(Color.RED));
 
                     // Adding the marker data to an array
