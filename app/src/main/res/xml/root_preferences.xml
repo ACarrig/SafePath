@@ -37,20 +37,13 @@
             app:title="Notifications" />
 
 
-        <ListPreference
+        <Preference
             app:key="bookmarks"
             app:summary="Your set bookmarks"
             app:title="Bookmarked routes" />
 
 
-
-
-
-
     </PreferenceCategory>
-
-
-
 
 
 </PreferenceScreen>

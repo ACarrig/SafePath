@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.common.api.Status;
@@ -56,12 +57,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     SharedPreferences sp;
     private int circleRadius;
-
-
     private int mapType;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
     PlacesClient placesClient;
-
 
     // For getting user location
     private final int FINE_PERMISSION_CODE = 1;
@@ -219,6 +217,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         startActivity(intent);
     }
+
+
 
     private void getLastLocation() {
         Log.i("tag", "getLastLocation called");
