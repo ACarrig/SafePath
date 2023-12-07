@@ -19,21 +19,20 @@ public class DirectionsParser {
     /**
      * Receives a JSONObject and returns a list of lists containing latitude and longitude.
      */
-    public List<List<HashMap<String, String>>> parse(JSONObject jObject, LatLng[] latLngArr, int dZoneCount, int circleRadius) {
+    public RoutesKVPair parse(JSONObject jObject, LatLng[] latLngArr, int dZoneCount, int circleRadius) {
         List<List<HashMap<String, String>>> routes = new ArrayList<>();
 
         JSONArray jRoutes = null;
         JSONArray jLegs = null;
         JSONArray jSteps = null;
 
-        boolean next = false; // added to check when route passes through danger zone, marks if we should move to next route
+        LatLng finalLL = null; // The last coordinates of our route
 
         try {
             jRoutes = jObject.getJSONArray("routes");
 
             // Traversing all routes
             for (int i = 0; i < jRoutes.length(); i++) { // This loop only gets run once...only 1 route being created?
-                next = false; //todo: del?
 
                 jLegs = ((JSONObject) jRoutes.get(i)).getJSONArray("legs");
                 List<HashMap<String, String>> path = new ArrayList<>();
@@ -51,31 +50,52 @@ public class DirectionsParser {
                         // Traversing all points
                         for (int l = 0; l < list.size(); l++) {
                             HashMap<String, String> hm = new HashMap<>();
-                            //hm.put("lat", Double.toString(list.get(l).latitude));
-                            //hm.put("lng", Double.toString(list.get(l).longitude));
-
-                            // todo: test distance func here -------------------------------------------------------------
 
                             // Comparing the traversal points to our danger zones
-                            if(dZoneCount == 0) path.add(hm);
+                            if(dZoneCount == 0) {
+                                hm.put("lat", Double.toString(list.get(l).latitude));
+                                hm.put("lng", Double.toString(list.get(l).longitude));
+                                path.add(hm); // if no danger zones path is safe to add
+                            }
+
+                            // Loop over danger zones to check for all possible conflicts
                             for(int m = 0; m < dZoneCount; m++) {
+                                // Coordinates for the center of the danger zone
                                 double dzLat = latLngArr[m].latitude;
                                 double dzLon = latLngArr[m].longitude;
 
-                                // checking if point in the path is outside of the dangerous area (distance > 200m)
-                                if(distance(dzLat, dzLon, list.get(l).latitude, list.get(l).longitude) > circleRadius) {
+                                // Points from the leg of the route we are checking
+                                double lastLat = list.get(l).latitude;
+                                double lastLon = list.get(l).longitude;
+
+                                // checking if point in the path is outside of the dangerous area (distance > radius)
+                                double distance = distance(dzLat, dzLon, lastLat, lastLon); //* 3.28084; // Convert to feet
+                                if(distance > (circleRadius * 1.5)) {
                                     hm.put("lat", Double.toString(list.get(l).latitude));
                                     hm.put("lng", Double.toString(list.get(l).longitude));
                                     path.add(hm);
-                                } else {
-                                    next = true;
-                                    break;
+
+                                    // Current last point of our route
+                                    finalLL = new LatLng(lastLat, lastLon);
+                                } else { // Else when coords we are checking are too close to danger zone
+                                    Log.i("TESTING", "Distance was less than boosted circle radius");
+                                    routes.add(path);
+                                    // If we never got any coords in our route before it failed
+                                    // then we don't have any reference for our waypoint
+                                    // todo: This case should not occur unless user starts in danger zone
+                                    //  mostly just an edge case to prevent crashing
+                                    if (finalLL == null) {
+                                        Log.i("TESTING", "finalLL was null");
+                                        finalLL = new LatLng(0, 0);
+                                        return new RoutesKVPair(routes, 1, finalLL);
+
+                                    } else { // we use whatever coords were last set to be finalLL
+                                        Log.i("TESTING", "finalLL was not null");
+                                        return new RoutesKVPair(routes, 1, finalLL);
+                                    }
                                 }
                             }
-                            //path.add(hm); //todo: uncomment ?---------------------------------------------------
-                            if (next) break;
                         }
-                        if (next) break;
                     }
                     routes.add(path);
                 }
@@ -87,7 +107,11 @@ public class DirectionsParser {
             // Handle other exceptions if necessary
         }
         Log.i("ROUTES LENGTH: ", "" + routes.size() + " routes");
-        return routes;
+
+        // If reached, we have a valid route and therefore a RouteKVPair with validity 0
+        //     *Note: if everything works well and we get a route, won't need finalLL
+        RoutesKVPair route = new RoutesKVPair(routes, 0, finalLL);
+        return route;
     }
 
     private List<LatLng> decodePoly(String encoded) {
@@ -137,6 +161,78 @@ public class DirectionsParser {
         double distance = R * c * 1000; // convert to meters
 
         return distance;
+    }
+
+    public List<List<HashMap<String, String>>> parseOLD(JSONObject jObject, LatLng[] latLngArr, int dZoneCount, int circleRadius) {
+        List<List<HashMap<String, String>>> routes = new ArrayList<>();
+
+        JSONArray jRoutes = null;
+        JSONArray jLegs = null;
+        JSONArray jSteps = null;
+
+        try {
+            jRoutes = jObject.getJSONArray("routes");
+
+            // Traversing all routes
+            for (int i = 0; i < jRoutes.length(); i++) { // This loop only gets run once...only 1 route being created?
+
+                jLegs = ((JSONObject) jRoutes.get(i)).getJSONArray("legs");
+                List<HashMap<String, String>> path = new ArrayList<>();
+
+                // Traversing all legs
+                for (int j = 0; j < jLegs.length(); j++) {
+                    jSteps = ((JSONObject) jLegs.get(j)).getJSONArray("steps");
+
+                    // Traversing all steps
+                    for (int k = 0; k < jSteps.length(); k++) {
+                        String polyline = "";
+                        polyline = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("polyline")).get("points");
+                        List<LatLng> list = decodePoly(polyline);
+
+                        // Traversing all points
+                        for (int l = 0; l < list.size(); l++) {
+                            HashMap<String, String> hm = new HashMap<>();
+
+                            // Comparing the traversal points to our danger zones
+                            if(dZoneCount == 0) {
+                                hm.put("lat", Double.toString(list.get(l).latitude));
+                                hm.put("lng", Double.toString(list.get(l).longitude));
+                                path.add(hm); // if no danger zones path is safe to add
+                            }
+
+                            // Loop over danger zones to check for all possible conflicts
+                            for(int m = 0; m < dZoneCount; m++) {
+                                // Coordinates for the center of the danger zone
+                                double dzLat = latLngArr[m].latitude;
+                                double dzLon = latLngArr[m].longitude;
+
+                                // Current coords from the leg of the route we are checking
+                                double lastLat = list.get(l).latitude;
+                                double lastLon = list.get(l).longitude;
+
+                                // checking if point in the path is outside of the dangerous area (distance > radius)
+                                double distance = distance(dzLat, dzLon, lastLat, lastLon) * 3.28084; // Convert to feet
+                                if(distance > (circleRadius * 1.1)) {
+                                    hm.put("lat", Double.toString(lastLat));
+                                    hm.put("lng", Double.toString(lastLon));
+                                    path.add(hm);
+                                } else { // Else when coords we are checking are too close to danger zone
+                                    return routes;
+                                }
+                            }
+                        }
+                    }
+                    routes.add(path);
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            // Handle other exceptions if necessary
+        }
+        Log.i("ROUTES LENGTH: ", "" + routes.size() + " routes");
+        return routes;
     }
 
 }

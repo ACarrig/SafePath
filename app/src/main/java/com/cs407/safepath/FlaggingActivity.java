@@ -30,6 +30,7 @@ public class FlaggingActivity extends AppCompatActivity {
     private int circleRadius;
 
     // Array with marker / danger zone center coordinates
+    // Wasn't sure how to use intents for a LatLng array so used String array instead
     String[] markerArr = new String[100];
     private int count = 0;
 

@@ -298,11 +298,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 jObject = new JSONObject(jsonData[0]);
                 DirectionsParser parser = new DirectionsParser();
 
-                routes = parser.parse(jObject, latLngArr, dZoneCount, circleRadius); //todo: added parameters for checking for danger zones
+                // Find a route to our destination
+                RoutesKVPair routeKVPair; // This is a new class I made to help w/ waypoint
+
+                routeKVPair = parser.parse(jObject, latLngArr, dZoneCount, circleRadius);
+                routes = routeKVPair.getRoutes();
+
+                // If route is not valid (goes through danger zone)
+                if (routeKVPair.isValidRoute() == 1) {
+                    //LatLng lastCoords = routeKVPair.getLastCoord();
+                    Log.i("TESTING", "NOT VALID ROUTE FROM ROUTEKVPAIR (MAIN)");
+                    // todo:
+                    //  Calculate waypoint
+                    // can multiply circleRadius by 3.28084 to get the value in meters (ishmail said it's feet rn)
+                    //calcWaypoint();
+
+                    // todo:
+                    //  Using new waypoint try and find another route
+
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return routes;
+        }
+
+        //todo: Waypoint calculation method
+        public void calcWaypoint() {
+
         }
 
         @Override
@@ -324,15 +348,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
 
-                    // todo: testing distance func. this should just omit the line, doesn't reroute
-                    // Only add the points that aren't in the dangerous area
-                    if(dZoneCount == 0) points.add(position);
+                    // Loop over all danger zones
                     for (int q = 0; q < dZoneCount; q++) {
                         if(distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) > circleRadius) {
+                            // Only add the points that aren't in the dangerous area
                             points.add(position);
                         }
                     }
-                    //points.add(position);
+                    // Always add the point if no danger zone to worry about
+                    if(dZoneCount == 0) points.add(position);
                 }
 
                 lineOptions.addAll(points);
