@@ -70,7 +70,7 @@ public class DirectionsParser {
 
                                 // checking if point in the path is outside of the dangerous area (distance > radius)
                                 double distance = distance(dzLat, dzLon, lastLat, lastLon); //* 3.28084; // Convert to feet
-                                if(distance > (circleRadius * 1.5)) {
+                                if(distance > (circleRadius * 1.125)) {
                                     hm.put("lat", Double.toString(list.get(l).latitude));
                                     hm.put("lng", Double.toString(list.get(l).longitude));
                                     path.add(hm);
@@ -211,7 +211,7 @@ public class DirectionsParser {
                                 double lastLon = list.get(l).longitude;
 
                                 // checking if point in the path is outside of the dangerous area (distance > radius)
-                                double distance = distance(dzLat, dzLon, lastLat, lastLon) * 3.28084; // Convert to feet
+                                double distance = distance(dzLat, dzLon, lastLat, lastLon); //* 3.28084; // Convert to feet
                                 if(distance > (circleRadius * 1.1)) {
                                     hm.put("lat", Double.toString(lastLat));
                                     hm.put("lng", Double.toString(lastLon));

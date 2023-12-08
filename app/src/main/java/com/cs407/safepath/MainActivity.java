@@ -16,7 +16,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.common.api.Status;
@@ -58,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     SharedPreferences sp;
     private int circleRadius;
     private int mapType;
+    private LatLng destination;
+    private LatLng circleCenter;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
     PlacesClient placesClient;
 
@@ -110,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 LatLng latLng = place.getLatLng();
+                destination = place.getLatLng(); //save final destination
                 Log.i("PlacesAPI", "" + latLng.latitude + "\n" + latLng.longitude);
 
                 mMap.addMarker(new MarkerOptions().position(latLng).title("Destination"));
@@ -161,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 double lat = Double.parseDouble(markerArr[i].substring(0, markerArr[i].indexOf(",")));
                 double lon = Double.parseDouble(markerArr[i].substring(markerArr[i].indexOf(",") + 1));
                 LatLng dZoneLatLng = new LatLng(lat, lon);
+                circleCenter = new LatLng(dZoneLatLng.latitude, dZoneLatLng.longitude);
 
                 // Draw the danger zone on the map
                 mMap.addMarker(new MarkerOptions().position(dZoneLatLng).title("Danger Zone"));
@@ -172,11 +175,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Add LatLng to array (for comparisons when drawing path)
                 latLngArr[i] = dZoneLatLng;
                 dZoneCount += 1;
+                //  Calculate waypoints surrounding danger zone radius for possible need to reroute.
+                double[][] waypoints = waypointCalculator(circleCenter.latitude, circleCenter.longitude, circleRadius);
+                Log.i("CIRCLERADIUS", String.valueOf(String.valueOf(circleRadius)));
+                Log.i("WAYPOINTSSS", String.valueOf(waypoints[0][0]) + "," + String.valueOf(waypoints[0][1]));
+                Log.i("WAYPOINTSSS", String.valueOf(waypoints[1][0]) + "," + String.valueOf(waypoints[1][1]));
+                Log.i("WAYPOINTSSS", String.valueOf(waypoints[2][0]) + "," + String.valueOf(waypoints[2][1]));
+                Log.i("WAYPOINTSSS", String.valueOf(waypoints[3][0]) + "," + String.valueOf(waypoints[3][1]));
+                Log.i("WAYPOINTSSS", String.valueOf(waypoints[5][0]) + "," + String.valueOf(waypoints[5][1]));
+                Log.i("WAYPOINTSSS", String.valueOf(waypoints[6][0]) + "," + String.valueOf(waypoints[6][1]));
+                Log.i("WAYPOINTSSS", String.valueOf(waypoints[7][0]) + "," + String.valueOf(waypoints[7][1]));
+
+
             }
         } catch (Exception e) {
             // no danger zone coord array yet (catch reached first time loading main screen)
             Log.i("CATCH CALLED", e.toString());
         }
+
+
 
         // Setting the camera & marker
         mMap.addMarker(new MarkerOptions().position(usrPos).title("My Location"));
@@ -306,16 +323,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 // If route is not valid (goes through danger zone)
                 if (routeKVPair.isValidRoute() == 1) {
-                    //LatLng lastCoords = routeKVPair.getLastCoord();
-                    Log.i("TESTING", "NOT VALID ROUTE FROM ROUTEKVPAIR (MAIN)");
-                    // todo:
-                    //  Calculate waypoint
+                    LatLng lastCoords = routeKVPair.getLastCoord();
+                    Log.i("TESTING", "NOT VALID ROUTE FROM ROUTEKVPAIR (MAIN)" + lastCoords.toString());
                     // can multiply circleRadius by 3.28084 to get the value in meters (ishmail said it's feet rn)
-                    //calcWaypoint();
-
-                    // todo:
-                    //  Using new waypoint try and find another route
-
+                    //Calculates the needed waypoints around the perimeter of the circle depending on the situation
+                    LatLng newWaypoint = calcWaypoint(lastCoords);
+                    //Now need to re-call directions parsing/download with given waypoints
+                    //START DOWNLOADING ROUTES JSON DATA FROM GOOGLE
+                    String url = getDirectionsUrl(lastCoords, destination, newWaypoint); //Form URL for google download
+                    DownloadTask downloadTask = new DownloadTask();
+                    downloadTask.execute(url);
                 }
 
             } catch (Exception e) {
@@ -324,9 +341,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return routes;
         }
 
-        //todo: Waypoint calculation method
-        public void calcWaypoint() {
-
+        public LatLng calcWaypoint(LatLng lastCoord) {
+            //Check which way the route would be approaching the zone and make a waypoint accordingly
+            LatLng waypoint = null;
+            if (lastCoord.latitude < circleCenter.latitude) {
+                //Coming from the left up into DZ
+                if (lastCoord.longitude < circleCenter.longitude) {
+                    //return set of waypoints - RA to Implement
+                }
+                //Coming from right up into DZ
+                if (lastCoord.longitude > circleCenter.longitude) {
+                    //return set of waypoints
+                }
+            }
+            if (lastCoord.latitude > circleCenter.latitude) {
+                //Coming from top left into DZ
+                if (lastCoord.longitude < circleCenter.longitude) {
+                    //return set of waypoints
+                }
+                //Coming from top right into DZ
+                if (lastCoord.longitude > circleCenter.longitude) {
+                    //return set of waypoints
+                }
+                }
+            Log.i("TESTING ROBERT A", waypoint.toString());
+            return waypoint;
         }
 
         @Override
@@ -392,6 +431,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters +
                 "&key=" + "AIzaSyBPP0y_iqwO9CW0Meb83aGZQ_F6b6R2zzw";
 
+       // String url = "https://maps.googleapis.com/maps/api/directions/json?destination=Montreal&origin=Toronto&waypoints=optimize:true|43.06,-89.4|&key=AIzaSyBPP0y_iqwO9CW0Meb83aGZQ_F6b6R2zzw";
+
+
+        return url;
+    }
+    private String getDirectionsUrl(LatLng origin, LatLng dest, LatLng waypoint) { //copy of class to accept waypoints
+
+        // Origin of route
+        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
+
+        // Destination of route
+        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+
+        //Waypoint to avoid the marker
+       // String way_pt = "waypoints=" + waypoint.latitude + "," + waypoint.longitude;
+
+        // Sensor enabled
+        String sensor = "sensor=false";
+        String mode = "mode=walking";
+        // Building the parameters to the web service
+        String parameters = str_origin + "&" + str_dest + "&" + "waypoints=optimize:true|" + waypoint.latitude + "," + waypoint.longitude + "|&" + sensor + "&" + mode;
+
+        // Output format
+        String output = "json";
+
+        // Building the url to the web service
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters +
+                "&key=" + "AIzaSyBPP0y_iqwO9CW0Meb83aGZQ_F6b6R2zzw";
+
+        // String url = "https://maps.googleapis.com/maps/api/directions/json?destination=Montreal&origin=Toronto&waypoints=optimize:true|43.06,-89.4|&key=AIzaSyBPP0y_iqwO9CW0Meb83aGZQ_F6b6R2zzw";
 
         return url;
     }
@@ -456,6 +525,32 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         double distance = R * c * 1000; // convert to meters
 
         return distance;
+    }
+    private static final double EARTH_RADIUS_M = 6371000.00;
+
+    public static double[][] waypointCalculator(double centerLat, double centerLon, double radiusInMeters) {
+        // Convert center coordinates to radians
+        double centerLatRad = Math.toRadians(centerLat);
+        double centerLonRad = Math.toRadians(centerLon);
+
+        // Calculate angular distance in radians
+        double angularDistance = radiusInMeters / EARTH_RADIUS_M;
+
+        // Calculate coordinates for 8 points on the perimeter
+        double[][] waypoints = new double[8][2];
+
+        for (int i = 0; i < 8; i++) {
+            double angle = Math.toRadians(i * 45.0); // Points spaced evenly at 45-degree intervals
+
+            double newLatRad = centerLatRad + angularDistance * Math.sin(angle);
+            double newLonRad = centerLonRad + angularDistance * Math.cos(angle) / Math.cos(centerLatRad);
+
+            // Convert back to degrees
+            waypoints[i][0] = Math.toDegrees(newLatRad);
+            waypoints[i][1] = Math.toDegrees(newLonRad);
+        }
+
+        return waypoints;
     }
 
 }
