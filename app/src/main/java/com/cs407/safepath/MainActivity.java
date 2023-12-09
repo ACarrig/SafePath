@@ -1,10 +1,15 @@
 package com.cs407.safepath;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.icu.text.DateFormat;
+import android.icu.text.SimpleDateFormat;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -48,6 +53,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -67,6 +73,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng bottomLeft;
     private LatLng Left;
     private LatLng topLeft;
+
+    private DBHelper dbHelper;
+
+    private Context context;
 
 
 
@@ -91,6 +101,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // initialize database for saving routes
+        context = getApplicationContext();
+        dbHelper = new DBHelper(context);
+        if (dbHelper.getNotesCount() > 5 ) {
+            dbHelper.deleteAllNotes();
+        }
 
         // Getting user's location / requesting location permission
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -123,6 +140,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // What we do with the selected location from the search bar
             @Override
             public void onPlaceSelected(@NonNull Place place) {
+
+                // Saving route to database -- ismail
+
+                Geocoder gCoder = new Geocoder(context);
+                String from = "";
+                ArrayList<Address> addresses = null;
+                try {
+                    addresses = (ArrayList<Address>) gCoder.getFromLocation(currentLocation.getLatitude(), currentLocation.getLongitude(), 1);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                if (addresses != null && addresses.size() > 0) {
+                    from = addresses.get(0).getAddressLine(0);
+                    if (from == null) {
+                        from = "ERROR";
+                    }
+                }
+                DateFormat dateFormat = new SimpleDateFormat("MM/DD/YYYY HH:mm:ss");
+                String date = dateFormat.format(new Date());
+                Note note1 = new Note(from, date, "x miles", place.getAddress());
+                dbHelper.addNote(note1);
+                //
+
                 LatLng latLng = place.getLatLng();
                 destination = place.getLatLng(); //save final destination
                 Log.i("PlacesAPI", "" + latLng.latitude + "\n" + latLng.longitude);
