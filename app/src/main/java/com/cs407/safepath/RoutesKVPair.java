@@ -10,11 +10,13 @@ public class RoutesKVPair {
     private List<List<HashMap<String, String>>> routes = null; // Route object from parsing
     private int valid; // Int representing route validity (0 means valid route, 1 means not valid)
     private LatLng lastCoord; // The last coordinates of our route
+    private boolean waypointaltRoute; //Signifies this is a recalculation with an alternate route
 
     public RoutesKVPair(List<List<HashMap<String, String>>> routes, int valid, LatLng lastCoord) {
         this.routes = routes;
         this.valid = valid;
         this.lastCoord = lastCoord;
+        this.waypointaltRoute = waypointaltRoute;
     }
 
     // This is our normal route object from before

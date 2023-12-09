@@ -57,16 +57,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     SharedPreferences sp;
     private int circleRadius;
     private int mapType;
+    private boolean waypointaltRoute = false;
     private LatLng destination;
     private LatLng circleCenter;
     private LatLng topCenter;
-    private LatLng topRight;
+    private LatLng topRight1;
+    private LatLng topRight2;
     private LatLng Right;
-    private LatLng bottomRight;
+    private LatLng bottomRight1;
+    private LatLng bottomRight2;
     private LatLng Bottom;
-    private LatLng bottomLeft;
+    private LatLng bottomLeft1;
+    private LatLng bottomLeft2;
     private LatLng Left;
-    private LatLng topLeft;
+    private LatLng topLeft1;
+    private LatLng topLeft2;
+
 
 
 
@@ -192,13 +198,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 double[][] waypoints = waypointCalculator(circleCenter.latitude, circleCenter.longitude, circleRadius);
 
                 topCenter = new LatLng(waypoints[0][0],waypoints[0][1]);
-                topRight = new LatLng(waypoints[1][0],waypoints[1][1]);
-                Right = new LatLng(waypoints[2][0],waypoints[2][1]);
-                bottomRight = new LatLng(waypoints[3][0],waypoints[3][1]);
-                Bottom = new LatLng(waypoints[4][0],waypoints[4][1]);
-                bottomLeft = new LatLng(waypoints[5][0],waypoints[5][1]);
-                Left = new LatLng(waypoints[6][0],waypoints[6][1]);
-                topLeft = new LatLng(waypoints[7][0],waypoints[7][1]);
+                topRight1 = new LatLng(waypoints[1][0],waypoints[1][1]);
+                topRight2 = new LatLng(waypoints[2][0],waypoints[2][1]);
+                Right = new LatLng(waypoints[3][0],waypoints[3][1]);
+                bottomRight1 = new LatLng(waypoints[4][0],waypoints[4][1]);
+                bottomRight2 = new LatLng(waypoints[5][0],waypoints[5][1]);
+                Bottom = new LatLng(waypoints[6][0],waypoints[6][1]);
+                bottomLeft1 = new LatLng(waypoints[7][0],waypoints[7][1]);
+                bottomLeft2 = new LatLng(waypoints[8][0],waypoints[8][1]);
+                Left = new LatLng(waypoints[9][0],waypoints[9][1]);
+                topLeft1 = new LatLng(waypoints[10][0],waypoints[10][1]);
+                topLeft2 = new LatLng(waypoints[11][0],waypoints[11][1]);
 
 
 
@@ -334,11 +344,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Find a route to our destination
                 RoutesKVPair routeKVPair; // This is a new class I made to help w/ waypoint
 
-                routeKVPair = parser.parse(jObject, latLngArr, dZoneCount, circleRadius);
+                routeKVPair = parser.parse(jObject, latLngArr, dZoneCount, circleRadius, waypointaltRoute);
                 routes = routeKVPair.getRoutes();
 
                 // If route is not valid (goes through danger zone)
                 if (routeKVPair.isValidRoute() == 1) {
+                    waypointaltRoute = true;
                     LatLng lastCoords = routeKVPair.getLastCoord();
                     Log.i("TESTING", "NOT VALID ROUTE FROM ROUTEKVPAIR (MAIN)" + lastCoords.toString());
                     //Calculates the needed waypoints around the perimeter of the circle depending on the situation
@@ -363,24 +374,44 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //Coming from the left up into DZ
                 if (lastCoord.longitude < circleCenter.longitude) {
                     //return set of waypoints - RA to Implement
-                    waypoints = new LatLng[3];
+                    waypoints = new LatLng[5];
                     waypoints[0] = Bottom;
-                    waypoints[1] = bottomRight;
-                    waypoints[2] = Right;
+                    waypoints[1] = bottomRight2;
+                    waypoints[2] = bottomRight1;
+                    waypoints[3] = Right;
+                    waypoints[4] = topRight2;
                 }
                 //Coming from right up into DZ
                 if (lastCoord.longitude > circleCenter.longitude) {
                     //return set of waypoints
+                    waypoints = new LatLng[5];
+                    waypoints[0] = Bottom;
+                    waypoints[1] = bottomLeft1;
+                    waypoints[2] = bottomLeft2;
+                    waypoints[3] = Left;
+                    waypoints[4] = topLeft1;
                 }
             }
             if (lastCoord.latitude > circleCenter.latitude) {
                 //Coming from top left into DZ
                 if (lastCoord.longitude < circleCenter.longitude) {
                     //return set of waypoints
+                    waypoints = new LatLng[5];
+                    waypoints[0] = topCenter;
+                    waypoints[1] = topRight1;
+                    waypoints[2] = topRight2;
+                    waypoints[3] = Right;
+                    waypoints[4] = bottomRight1;
                 }
                 //Coming from top right into DZ
                 if (lastCoord.longitude > circleCenter.longitude) {
                     //return set of waypoints
+                    waypoints = new LatLng[5];
+                    waypoints[0] = topCenter;
+                    waypoints[1] = topLeft2;
+                    waypoints[2] = topLeft1;
+                    waypoints[3] = Left;
+                    waypoints[4] = bottomLeft2;
                 }
                 }
             return waypoints;
@@ -470,7 +501,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Building the parameters to the web service
         String parameters = str_origin + "&" + str_dest + "&" + "waypoints=optimize:true|" +
                 waypoint[0].latitude + "," + waypoint[0].longitude + "|" + waypoint[1].latitude + "," + waypoint[1].longitude + "|" +
-                waypoint[2].latitude + "," + waypoint[2].longitude + "|&" + sensor + "&" + mode;
+                waypoint[2].latitude + "," + waypoint[2].longitude + "|" + waypoint[3].latitude + "," + waypoint[3].longitude + "|" +
+                waypoint[4].latitude + "," + waypoint[4].longitude + "|&" + sensor + "&" + mode;
 
         // Output format
         String output = "json";
@@ -478,6 +510,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Building the url to the web service
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters +
                 "&key=" + "AIzaSyBPP0y_iqwO9CW0Meb83aGZQ_F6b6R2zzw";
+
+        Log.i("Route with Waypoints", url);
 
 
         return url;
@@ -553,7 +587,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param centerLat
      * @param centerLon
      * @param radiusInMeters
-     * @return waypoints - the 2d array holding all 8 waypoints.
+     * @return waypoints - the 2d array holding all 12 waypoints.
      */
     public static double[][] waypointCalculator(double centerLat, double centerLon, double radiusInMeters) {
         // Convert center coordinates to radians
@@ -561,13 +595,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         double centerLonRad = Math.toRadians(centerLon);
 
         // Calculate angular distance in radians
-        double angularDistance = (radiusInMeters + 290) / EARTH_RADIUS_M;
+        double angularDistance = (radiusInMeters + 50) / EARTH_RADIUS_M;
 
-        // Calculate coordinates for 8 points on the perimeter
-        double[][] waypoints = new double[8][2];
+        // Calculate coordinates for 12 points on the perimeter
+        double[][] waypoints = new double[12][2];
 
-        for (int i = 0; i < 8; i++) {
-            double angle = Math.toRadians(i * 45.0); // Points spaced evenly at 45-degree intervals
+        for (int i = 0; i < 12; i++) {
+            double angle = Math.toRadians(i * 30.0); // Points spaced evenly at 30-degree intervals
 
             double newLatRad = centerLatRad + angularDistance * Math.sin(angle);
             double newLonRad = centerLonRad + angularDistance * Math.cos(angle) / Math.cos(centerLatRad);
