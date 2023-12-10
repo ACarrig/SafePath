@@ -1,6 +1,7 @@
 package com.cs407.safepath;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -371,6 +372,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
 
         // Parsing the data in non-ui thread
+        @SuppressLint("WrongThread")
         @Override
         protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
 
@@ -476,11 +478,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
 
+                    if (j == path.size() - 1) {
+                        notifyArrival();
+                    }
                     // Loop over all danger zones
                     for (int q = 0; q < dZoneCount; q++) {
                         if(distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) > circleRadius) {
                             // Only add the points that aren't in the dangerous area
                             points.add(position);
+                        }
+                        else if (distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) <= circleRadius) {
+                            notifyDangerZone();
                         }
                     }
                     // Always add the point if no danger zone to worry about
@@ -652,6 +660,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         return waypoints;
+    }
+    private void notifyArrival() {
+        runOnUiThread(() -> Toast.makeText(MainActivity.this, "You have arrived at your destination!", Toast.LENGTH_SHORT).show());
+    }
+
+    private void notifyDangerZone() {
+        runOnUiThread(() -> Toast.makeText(MainActivity.this, "You are close to a danger zone!", Toast.LENGTH_SHORT).show());
     }
 
 }
