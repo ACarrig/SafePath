@@ -237,6 +237,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 latLngArr[i] = dZoneLatLng;
                 dZoneCount += 1;
 
+                if (dZoneCount > 0 && distance(latLngArr[i].latitude, latLngArr[i].longitude, lat, lon) <= 400) {
+                    dangerZoneNotification();
+                }
                 /** //  Calculate waypoints surrounding danger zone radius for possible need to reroute.
                 double[][] waypoints = waypointCalculator(circleCenter.latitude, circleCenter.longitude, circleRadius);
                 topCenter = new LatLng(waypoints[0][0],waypoints[0][1]);
@@ -504,8 +507,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
 
+                    // Notify the user if they have arrived at their destination.
                     if (j == path.size() - 1) {
-                        notifyArrival();
+                        destinationArrivalNotification();
                     }
                     // Loop over all danger zones
                     for (int q = 0; q < dZoneCount; q++) {
@@ -513,8 +517,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             // Only add the points that aren't in the dangerous area
                             points.add(position);
                         }
-                        else if (distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) <= circleRadius) {
-                            notifyDangerZone();
+                        // Notify the user if they are near a danger zone
+                        if (distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) <= 50) {
+                            dangerZoneNotification();
                         }
                     }
                     // Always add the point if no danger zone to worry about
@@ -687,11 +692,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         return waypoints;
     }
-    private void notifyArrival() {
+    private void destinationArrivalNotification() {
+        Log.d("Main Activity", "destinationArrivalNotification() method called!");
         runOnUiThread(() -> Toast.makeText(MainActivity.this, "You have arrived at your destination!", Toast.LENGTH_SHORT).show());
     }
 
-    private void notifyDangerZone() {
+    private void dangerZoneNotification() {
+        Log.d("Main Activity", "dangerZoneNotification() method called!");
         runOnUiThread(() -> Toast.makeText(MainActivity.this, "You are close to a danger zone!", Toast.LENGTH_SHORT).show());
     }
 
