@@ -22,4 +22,12 @@
 
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>
+
+    <!-- Notification Information -->
+    <string name="send_notification"> Send Notification</string>
+    <string name="please_allow_notification"> Please allow all notifications to continue</string>
+    <string name="channel_name"> Safe Path</string>
+    <string name="channel_description"> Safe Path notifications</string>
+    <string name="hide_on_lockscreen"> Hide content when locked</string>
+
 </resources>

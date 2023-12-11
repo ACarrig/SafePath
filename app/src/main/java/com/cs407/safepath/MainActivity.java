@@ -13,15 +13,19 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.common.api.Status;
@@ -203,6 +207,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 openFlaggingScreen();
             }
         });
+
+        // Notification intialization
+        requestPermission();
+        NotificationHelper.getInstance().createNotificationChannel((getApplicationContext()));
+
     }
 
     @Override
@@ -237,8 +246,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 latLngArr[i] = dZoneLatLng;
                 dZoneCount += 1;
 
-                if (dZoneCount > 0 && distance(latLngArr[i].latitude, latLngArr[i].longitude, lat, lon) <= 400) {
-                    dangerZoneNotification();
+                if (dZoneCount > 0 && distance(latLngArr[i].latitude, latLngArr[i].longitude, lat, lon) <= circleRadius) {
+                    NotificationHelper.getInstance().dangerZoneNotification(getApplicationContext());
                 }
                 /** //  Calculate waypoints surrounding danger zone radius for possible need to reroute.
                 double[][] waypoints = waypointCalculator(circleCenter.latitude, circleCenter.longitude, circleRadius);
@@ -509,7 +518,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     // Notify the user if they have arrived at their destination.
                     if (j == path.size() - 1) {
-                        destinationArrivalNotification();
+                        NotificationHelper.getInstance().destinationArrivalNotification(getApplicationContext());
                     }
                     // Loop over all danger zones
                     for (int q = 0; q < dZoneCount; q++) {
@@ -518,8 +527,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             points.add(position);
                         }
                         // Notify the user if they are near a danger zone
-                        if (distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) <= 50) {
-                            dangerZoneNotification();
+                        if (distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) <= circleRadius) {
+                            NotificationHelper.getInstance().dangerZoneNotification(getApplicationContext());
                         }
                     }
                     // Always add the point if no danger zone to worry about
@@ -692,14 +701,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         return waypoints;
     }
-    private void destinationArrivalNotification() {
-        Log.d("Main Activity", "destinationArrivalNotification() method called!");
-        runOnUiThread(() -> Toast.makeText(MainActivity.this, "You have arrived at your destination!", Toast.LENGTH_SHORT).show());
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+        if (!isGranted) {
+            Toast.makeText(this, R.string.please_allow_notification, Toast.LENGTH_LONG).show();
+        }
+    });
+
+    private void requestPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+        }
     }
 
-    private void dangerZoneNotification() {
-        Log.d("Main Activity", "dangerZoneNotification() method called!");
-        runOnUiThread(() -> Toast.makeText(MainActivity.this, "You are close to a danger zone!", Toast.LENGTH_SHORT).show());
-    }
+//    private void destinationArrivalNotification() {
+//        Log.d("Main Activity", "destinationArrivalNotification() method called!");
+//        runOnUiThread(() -> Toast.makeText(MainActivity.this, "You have arrived at your destination!", Toast.LENGTH_SHORT).show());
+//    }
+//
+//    private void dangerZoneNotification() {
+//        Log.d("Main Activity", "dangerZoneNotification() method called!");
+//        runOnUiThread(() -> Toast.makeText(MainActivity.this, "You are close to a danger zone!", Toast.LENGTH_SHORT).show());
+//    }
 
 }
