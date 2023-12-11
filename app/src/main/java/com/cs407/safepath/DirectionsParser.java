@@ -163,6 +163,7 @@ public class DirectionsParser {
         return distance;
     }
 
+    // For testing
     public List<List<HashMap<String, String>>> parseOLD(JSONObject jObject, LatLng[] latLngArr, int dZoneCount, int circleRadius) {
         List<List<HashMap<String, String>>> routes = new ArrayList<>();
 

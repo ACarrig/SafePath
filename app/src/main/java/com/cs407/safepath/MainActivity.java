@@ -85,8 +85,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private Context context;
 
-
-
+    private int failCount;
+    private String[] rerouteMarkerArr;
 
 
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
@@ -217,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         try {
             Intent intent = getIntent();
             String[] markerArr = intent.getStringArrayExtra("markerArr");
+            rerouteMarkerArr = markerArr;
             for (int i = 0; i < markerArr.length; i++) {
 
                 // Pull lat and lon from each element in the array
@@ -235,9 +236,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Add LatLng to array (for comparisons when drawing path)
                 latLngArr[i] = dZoneLatLng;
                 dZoneCount += 1;
-                //  Calculate waypoints surrounding danger zone radius for possible need to reroute.
-                double[][] waypoints = waypointCalculator(circleCenter.latitude, circleCenter.longitude, circleRadius);
 
+                /** //  Calculate waypoints surrounding danger zone radius for possible need to reroute.
+                double[][] waypoints = waypointCalculator(circleCenter.latitude, circleCenter.longitude, circleRadius);
                 topCenter = new LatLng(waypoints[0][0],waypoints[0][1]);
                 topRight1 = new LatLng(waypoints[1][0],waypoints[1][1]);
                 topRight2 = new LatLng(waypoints[2][0],waypoints[2][1]);
@@ -249,10 +250,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 bottomLeft2 = new LatLng(waypoints[8][0],waypoints[8][1]);
                 Left = new LatLng(waypoints[9][0],waypoints[9][1]);
                 topLeft1 = new LatLng(waypoints[10][0],waypoints[10][1]);
-                topLeft2 = new LatLng(waypoints[11][0],waypoints[11][1]);
-
-
-
+                topLeft2 = new LatLng(waypoints[11][0],waypoints[11][1]); */
 
             }
         } catch (Exception e) {
@@ -386,16 +384,44 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Find a route to our destination
                 RoutesKVPair routeKVPair; // This is a new class I made to help w/ waypoint
 
-                routeKVPair = parser.parse(jObject, latLngArr, dZoneCount, circleRadius, waypointaltRoute);
+                routeKVPair = parser.parse(jObject, latLngArr, dZoneCount, circleRadius);
                 routes = routeKVPair.getRoutes();
 
                 // If route is not valid (goes through danger zone)
                 if (routeKVPair.isValidRoute() == 1) {
                     waypointaltRoute = true;
+
+                    failCount += 1;
+
+                    for(int d = 0; d < dZoneCount; d++) {
+                        // Pull lat and lon from each element in the array
+                        double lat = Double.parseDouble(rerouteMarkerArr[d].substring(0, rerouteMarkerArr[d].indexOf(",")));
+                        double lon = Double.parseDouble(rerouteMarkerArr[d].substring(rerouteMarkerArr[d].indexOf(",") + 1));
+                        LatLng dZoneLatLng = new LatLng(lat, lon);
+                        circleCenter = new LatLng(dZoneLatLng.latitude, dZoneLatLng.longitude);
+
+                        //  Calculate waypoints surrounding danger zone radius for possible need to reroute.
+                        double[][] waypoints = waypointCalculator(circleCenter.latitude, circleCenter.longitude, circleRadius, failCount);
+                        topCenter = new LatLng(waypoints[0][0],waypoints[0][1]);
+                        topRight1 = new LatLng(waypoints[1][0],waypoints[1][1]);
+                        topRight2 = new LatLng(waypoints[2][0],waypoints[2][1]);
+                        Right = new LatLng(waypoints[3][0],waypoints[3][1]);
+                        bottomRight1 = new LatLng(waypoints[4][0],waypoints[4][1]);
+                        bottomRight2 = new LatLng(waypoints[5][0],waypoints[5][1]);
+                        Bottom = new LatLng(waypoints[6][0],waypoints[6][1]);
+                        bottomLeft1 = new LatLng(waypoints[7][0],waypoints[7][1]);
+                        bottomLeft2 = new LatLng(waypoints[8][0],waypoints[8][1]);
+                        Left = new LatLng(waypoints[9][0],waypoints[9][1]);
+                        topLeft1 = new LatLng(waypoints[10][0],waypoints[10][1]);
+                        topLeft2 = new LatLng(waypoints[11][0],waypoints[11][1]);
+                    }
+
                     LatLng lastCoords = routeKVPair.getLastCoord();
                     Log.i("TESTING", "NOT VALID ROUTE FROM ROUTEKVPAIR (MAIN)" + lastCoords.toString());
+
                     //Calculates the needed waypoints around the perimeter of the circle depending on the situation
                     LatLng[] newWaypoint = calcWaypoint(lastCoords);
+
                     //Now need to re-call directions parsing/download with given waypoints
                     //START DOWNLOADING ROUTES JSON DATA FROM GOOGLE
                     String url = getDirectionsUrl(lastCoords, destination, newWaypoint); //Form URL for google download
@@ -637,13 +663,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param radiusInMeters
      * @return waypoints - the 2d array holding all 12 waypoints.
      */
-    public static double[][] waypointCalculator(double centerLat, double centerLon, double radiusInMeters) {
+    public static double[][] waypointCalculator(double centerLat, double centerLon, double radiusInMeters, int failCount) {
         // Convert center coordinates to radians
         double centerLatRad = Math.toRadians(centerLat);
         double centerLonRad = Math.toRadians(centerLon);
 
         // Calculate angular distance in radians
-        double angularDistance = (radiusInMeters + 50) / EARTH_RADIUS_M;
+        double angularDistance = (radiusInMeters + (50 * failCount)) / EARTH_RADIUS_M;
 
         // Calculate coordinates for 12 points on the perimeter
         double[][] waypoints = new double[12][2];
