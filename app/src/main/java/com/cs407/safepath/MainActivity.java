@@ -30,6 +30,8 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -47,6 +49,7 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 
 import org.json.JSONObject;
 
@@ -84,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng topLeft1;
     private LatLng topLeft2;
 
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
     private DBHelper dbHelper;
 
@@ -99,7 +103,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // For getting user location
     private final int FINE_PERMISSION_CODE = 1;
     Location currentLocation;
-    FusedLocationProviderClient fusedLocationProviderClient;
 
     // I made a google maps api key that has all the stuff enabled if needed -- Aidan
     private final String Api_Key = "AIzaSyCN5H7DS_wiFX29U-tgHTaZhToyi5VpfUU";
@@ -211,7 +214,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Notification intialization
         requestPermission();
         NotificationHelper.getInstance().createNotificationChannel((getApplicationContext()));
-
     }
 
     @Override
@@ -246,9 +248,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 latLngArr[i] = dZoneLatLng;
                 dZoneCount += 1;
 
-                if (dZoneCount > 0 && distance(latLngArr[i].latitude, latLngArr[i].longitude, lat, lon) <= circleRadius) {
+                // Checks if a user is close to a danger zone and notifies them (on creation of a dangerzone)
+                double distanceToDestination = distance(currentLocation.getLatitude(), currentLocation.getLongitude(), lat, lon);
+
+                if (distanceToDestination < 50) {
                     NotificationHelper.getInstance().dangerZoneNotification(getApplicationContext());
                 }
+
                 /** //  Calculate waypoints surrounding danger zone radius for possible need to reroute.
                 double[][] waypoints = waypointCalculator(circleCenter.latitude, circleCenter.longitude, circleRadius);
                 topCenter = new LatLng(waypoints[0][0],waypoints[0][1]);
@@ -311,7 +317,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         startActivity(intent);
     }
-
 
 
     private void getLastLocation() {
@@ -516,9 +521,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
 
-                    // Notify the user if they have arrived at their destination.
+                    // Checks and notifies user if they have arrived at their destination.
                     if (j == path.size() - 1) {
-                        NotificationHelper.getInstance().destinationArrivalNotification(getApplicationContext());
+                        double distanceToDestination = distance(currentLocation.getLatitude(), currentLocation.getLongitude(), destination.latitude, destination.longitude);
+                        if (distanceToDestination < 10) {
+                            NotificationHelper.getInstance().destinationArrivalNotification(getApplicationContext());
+                        }
                     }
                     // Loop over all danger zones
                     for (int q = 0; q < dZoneCount; q++) {
@@ -526,8 +534,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             // Only add the points that aren't in the dangerous area
                             points.add(position);
                         }
-                        // Notify the user if they are near a danger zone
-                        if (distance(latLngArr[q].latitude, latLngArr[q].longitude, lat, lng) <= circleRadius) {
+
+                        // Checks and notifies user if they are near a danger zone
+                        double distanceToDestination = distance(currentLocation.getLatitude(), currentLocation.getLongitude(), lat, lng);
+
+                        if (distanceToDestination < 50) {
                             NotificationHelper.getInstance().dangerZoneNotification(getApplicationContext());
                         }
                     }
@@ -716,15 +727,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
         }
     }
-
-//    private void destinationArrivalNotification() {
-//        Log.d("Main Activity", "destinationArrivalNotification() method called!");
-//        runOnUiThread(() -> Toast.makeText(MainActivity.this, "You have arrived at your destination!", Toast.LENGTH_SHORT).show());
-//    }
-//
-//    private void dangerZoneNotification() {
-//        Log.d("Main Activity", "dangerZoneNotification() method called!");
-//        runOnUiThread(() -> Toast.makeText(MainActivity.this, "You are close to a danger zone!", Toast.LENGTH_SHORT).show());
-//    }
 
 }
