@@ -1,6 +1,6 @@
 An Android App that allows users to reach their destination saftely and efficiently.
 
-Uses Android Maps API as the interface.
+Uses Google Maps API as the interface for accurate navigation.
 Algorithm designed to parse through available routes while avoiding set danger zones.
 
 Small database to record recently searched routes.
